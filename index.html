@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Today's Work</title>
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --card: #ffffff;
+      --ink: #1f2937;
+      --ink-soft: #6b7280;
+      --accent: #2563eb;
+      --accent-ink: #ffffff;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --border: #e5e7eb;
+      --muted: #f3f4f6;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 24px; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color: var(--ink); background: linear-gradient(180deg, var(--bg), #eef2ff);
+    }
+    .app { max-width: 980px; margin: 0 auto; display: grid; gap: 16px; }
+    header {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+    }
+    header h1 { font-size: 22px; margin: 0; letter-spacing: 0.2px; }
+    header .date { color: var(--ink-soft); font-size: 14px; }
+    .panel {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+    }
+    .controls { padding: 16px; display: grid; gap: 12px; }
+    label { font-size: 14px; color: var(--ink-soft); }
+    textarea {
+      width: 100%; min-height: 90px; resize: vertical; padding: 12px 14px; border-radius: 12px;
+      border: 1px solid var(--border); background: var(--muted); color: var(--ink); font-size: 15px;
+    }
+    textarea:disabled { opacity: 0.6; background: #e5e7eb; cursor: not-allowed; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .row .left, .row .right { display: flex; align-items: center; gap: 10px; }
+    button {
+      appearance: none; border: none; background: var(--accent); color: var(--accent-ink);
+      padding: 10px 14px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: transform .04s ease, box-shadow .2s ease, background .2s ease;
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
+    }
+    button.secondary { background: #111827; box-shadow: 0 6px 18px rgba(17, 24, 39, 0.18); }
+    button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--border); box-shadow: none; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
+    button:active { transform: translateY(1px); }
+    #toggleBtn.running { background: var(--danger); }
+    #callBtn { background: var(--success); }
+    #callBtn.active { background: var(--danger); }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    thead th {
+      text-align: left; font-size: 13px; color: var(--ink-soft); font-weight: 700; letter-spacing: .2px;
+      background: #f8fafc; position: sticky; top: 0; z-index: 1; border-bottom: 1px solid var(--border);
+      padding: 12px 10px;
+    }
+    tbody td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tbody tr:last-child td { border-bottom: none; }
+    .table-wrap { overflow: auto; border-top-left-radius: var(--radius); border-top-right-radius: var(--radius); }
+    .footer-actions {
+      display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-top: 1px solid var(--border);
+      background: linear-gradient(180deg, #fff, #f9fafb);
+      border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius);
+    }
+    .hint { color: var(--ink-soft); font-size: 13px; }
+    .pill { padding: 4px 8px; background: #e0e7ff; color: #1e3a8a; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .desc-cell { max-width: 520px; }
+    .nowrap { white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1><span class="pill">Today's</span> Work</h1>
+      <div class="date" id="todayStr">—</div>
+    </header>
+
+    <section class="panel">
+      <div class="controls">
+        <div>
+          <label for="description">Description</label>
+          <textarea id="description" placeholder="What are you working on?"></textarea>
+        </div>
+        <div class="row">
+          <div class="left">
+            <button id="saveBtn" class="secondary" title="Download the table as a CSV file">Save as CSV</button>
+          </div>
+          <div class="right">
+            <button id="toggleBtn">Start Task</button>
+            <button id="callBtn">Call</button>
+          </div>
+        </div>
+        <div class="hint">The app saves your table in this browser session automatically.</div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="taskTable" aria-describedby="Task log table">
+          <thead>
+            <tr>
+              <th style="width:60px">No</th>
+              <th>Description</th>
+              <th class="nowrap">Start Time</th>
+              <th class="nowrap">End Time</th>
+              <th class="nowrap">Duration</th>
+              <th style="width:140px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="footer-actions">
+        <div class="hint" id="status">Ready</div>
+        <div class="hint">Tip: Click “Edit” to change any description.</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'taskTimerApp.v1';
+    let tasks = [];
+    let runningId = null;
+    let runningCallId = null;
+    let tick = null;
+
+    const todayStrEl = document.getElementById('todayStr');
+    const descEl = document.getElementById('description');
+    const toggleBtn = document.getElementById('toggleBtn');
+    const callBtn = document.getElementById('callBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const tbody = document.getElementById('tbody');
+    const statusEl = document.getElementById('status');
+
+    const fmtDate = (d) => new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'}).format(d);
+    const fmtTime = (iso) => iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+    const nowISO = () => new Date().toISOString();
+    const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+
+    function msToHMS(ms){
+      if (ms == null || ms < 0) return '';
+      const s = Math.floor(ms/1000);
+      const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+      const pad = (n) => String(n).padStart(2,'0');
+      return `${pad(h)}:${pad(m)}:${pad(sec)}`;
+    }
+    function durationBetween(startISO, endISO){
+      if (!startISO) return '';
+      const st = new Date(startISO).getTime();
+      const en = endISO ? new Date(endISO).getTime() : Date.now();
+      return msToHMS(en - st);
+    }
+    function setStatus(msg) { statusEl.textContent = msg; }
+    function persist() { sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ tasks, runningId, runningCallId })); }
+    function restore() {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      try {
+        const { tasks: t = [], runningId: r = null, runningCallId: c = null } = JSON.parse(raw);
+        tasks = t; runningId = r; runningCallId = c;
+      } catch {}
+    }
+    function renderDate() { todayStrEl.textContent = fmtDate(new Date()); }
+
+    function render() {
+      tbody.innerHTML = '';
+      const rows = [...tasks].reverse();
+      rows.forEach((t, idx) => {
+        const tr = document.createElement('tr');
+        const no = rows.length - idx;
+        tr.innerHTML = `
+          <td>${no}</td>
+          <td>${t.description || ''}</td>
+          <td>${fmtTime(t.startISO)}</td>
+          <td>${fmtTime(t.endISO)}</td>
+          <td class="nowrap">${durationBetween(t.startISO, t.endISO)}</td>
+          <td><button class='ghost' onclick="editTask('${t.id}')">Edit</button></td>`;
+        tbody.appendChild(tr);
+      });
+
+      const isRunning = Boolean(runningId);
+      toggleBtn.textContent = isRunning ? 'Stop Task' : 'Start Task';
+      toggleBtn.classList.toggle('running', isRunning);
+      descEl.disabled = isRunning;
+
+      const isCalling = Boolean(runningCallId);
+      callBtn.textContent = isCalling ? 'Hang Up' : 'Call';
+      callBtn.classList.toggle('active', isCalling);
+
+      if (tick) { clearInterval(tick); tick = null; }
+      if (isRunning || isCalling) {
+        tick = setInterval(() => {
+          const rows = [...tasks].reverse();
+          for (let i = 0; i < rows.length; i++){
+            const row = tbody.children[i];
+            if (!row) continue;
+            const t = rows[i];
+            const durCell = row.children[4];
+            const live = (!t.endISO && (t.id === runningId || t.id === runningCallId)) ? durationBetween(t.startISO, null) : durationBetween(t.startISO, t.endISO);
+            durCell.textContent = live;
+          }
+        }, 1000);
+      }
+    }
+
+    function startTask() {
+      const desc = descEl.value.trim();
+      const task = { id: uid(), description: desc, startISO: nowISO(), endISO: null };
+      tasks.push(task);
+      runningId = task.id;
+      persist();
+      render();
+      setStatus('Task started.');
+    }
+    function stopTask() {
+      const t = tasks.find(x => x.id === runningId);
+      if (t) {
+        t.endISO = nowISO();
+        runningId = null;
+        descEl.disabled = false;
+        descEl.value = '';
+        persist();
+        render();
+        setStatus('Task stopped and input cleared.');
+      }
+    }
+    function startCall() {
+      const call = { id: uid(), description: 'Call -', startISO: nowISO(), endISO: null };
+      tasks.push(call);
+      runningCallId = call.id;
+      persist();
+      render();
+      setStatus('Call started.');
+    }
+    function stopCall() {
+      const c = tasks.find(x => x.id === runningCallId);
+      if (c) {
+        c.endISO = nowISO();
+        runningCallId = null;
+        persist();
+        render();
+        setStatus('Call ended.');
+      }
+    }
+    function editTask(id) {
+      const t = tasks.find(x => x.id === id);
+      if (!t) return;
+      const newDesc = prompt('Edit description', t.description);
+      if (newDesc !== null) {
+        t.description = newDesc.trim();
+        persist();
+        render();
+        setStatus('Description updated.');
+      }
+    }
+
+    // --- CSV export (replaces text export) ---
+    function escapeCsvField(v){
+      const s = String(v ?? '');
+      const must = /[",\n]/.test(s);
+      const esc = s.replace(/"/g,'""');
+      return must ? `"${esc}"` : s;
+    }
+    function buildCsv(){
+      const header = ['No','Description','Start Time','End Time','Duration'];
+      const rows = [...tasks].reverse();
+      const data = rows.map((t, i) => [
+        rows.length - i,
+        (t.description||'').replace(/\s+/g,' ').trim(),
+        fmtTime(t.startISO),
+        fmtTime(t.endISO),
+        durationBetween(t.startISO, t.endISO)
+      ]);
+      const lines = [header, ...data].map(r => r.map(escapeCsvField).join(','));
+      return '\uFEFF' + lines.join('\n') + '\n';
+    }
+    function downloadCsv(){
+      const csv = buildCsv();
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'tasks.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      setStatus('Tasks saved to CSV.');
+    }
+
+    toggleBtn.addEventListener('click', () => runningId ? stopTask() : startTask());
+    callBtn.addEventListener('click', () => runningCallId ? stopCall() : startCall());
+    saveBtn.addEventListener('click', downloadCsv);
+
+    renderDate();
+    restore();
+    render();
+  </script>
+</body>
+</html>
