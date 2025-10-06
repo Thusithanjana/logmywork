@@ -64,7 +64,8 @@ Each row in the exported CSV contains:
 
 Just upload `index.html` to any web server or open it locally by double-clicking the file.  
 No dependencies, no build steps — it’s ready to use.
-
+Live Demo
+https://thusithanjana.github.io/logmywork/
 ---
 
 ## 📜 License
